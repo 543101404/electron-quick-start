@@ -20,11 +20,17 @@
       // You can also require other files to run in this process
       require('./renderer.js')
 	  var ffi = require('ffi')
-
+		/*
 		const Dll = ffi.Library('dll/MyDLL.dll', {
 				'Add': ['float', ['float', 'float']],
 				'Hello': ['string', []],
 				'StrLength': ['int', ['string']]
+		})*/
+		
+		const Dll = ffi.Library('dll/DllExport32.dll', {
+
+				'Hello': ['string', []]
+
 		})
 		document.getElementById('hello').innerHTML = Dll.Hello();
 		
