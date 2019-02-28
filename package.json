@@ -4,7 +4,8 @@
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "rebuild": "npm rebuild --runtime=electron --target=4.0.4 --disturl=http://atom.io/download/atom-shell --abi=69"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -17,6 +18,12 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^4.0.4"
+    "electron": "^4.0.4",
+    "electron-rebuild": "^1.8.4"
+  },
+  "dependencies": {
+    "electron": "^4.0.4",
+    "ffi": "^2.3.0",
+    "nan": "^2.12.1"
   }
 }

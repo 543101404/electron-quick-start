@@ -10,10 +10,25 @@
     We are using Node.js <script>document.write(process.versions.node)</script>,
     Chromium <script>document.write(process.versions.chrome)</script>,
     and Electron <script>document.write(process.versions.electron)</script>.
+	
+	<div class="form-group">
+		<label>七、C++ Dll hello</label>
+		<span id="hello"></span>
+	</div>
 
     <script>
       // You can also require other files to run in this process
       require('./renderer.js')
+	  var ffi = require('ffi')
+
+		const Dll = ffi.Library('dll/MyDLL.dll', {
+				'Add': ['float', ['float', 'float']],
+				'Hello': ['string', []],
+				'StrLength': ['int', ['string']]
+		})
+		document.getElementById('hello').innerHTML = Dll.Hello();
+		
+		
     </script>
   </body>
 </html>
