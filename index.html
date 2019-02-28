@@ -14,27 +14,104 @@
 	<div class="form-group">
 		<label>七、C++ Dll hello</label>
 		<span id="hello"></span>
+		
+		<div class="demo-controls">
+            <button class="demo-button" id="showprintwindown">showprintwindown</button>
+			<button class="demo-button" id="preview">preview</button>
+          </div>
+		
 	</div>
+	
+
+	
 
     <script>
       // You can also require other files to run in this process
       require('./renderer.js')
-	  var ffi = require('ffi')
+	  var ref = require("ref");
+	 var ffi = require("ffi");
+	 var path = require('path')
+	 var fs = require('fs')
+
+	 const { BrowserWindow } = require('electron').remote
+
+	var win = null;
+
 		/*
 		const Dll = ffi.Library('dll/MyDLL.dll', {
 				'Add': ['float', ['float', 'float']],
 				'Hello': ['string', []],
 				'StrLength': ['int', ['string']]
 		})*/
-		
-		const Dll = ffi.Library('dll/DllExport32.dll', {
+		/*
+		const testDll = ffi.Library('dll/DllExport32.dll', {
 
 				'Hello': ['string', []]
 
 		})
-		document.getElementById('hello').innerHTML = Dll.Hello();
+		document.getElementById('hello').innerHTML = testDll.Hello();
+		*/
+		
+	
+		var _void = ref.types.void 
+		var _voidPtr = ref.refType(_void);
+		//var _stringPtr = ref.refType(ref.types.string);
+		//var stringPtr = ref.refType(ref.types.CString);
+		var ctrlHandle = null;
+	var tb = ffi.Library('dll/TBillOneCore.dll', {
+
+				'CreateGeneBillCtrl3': ['int', []],
+				'FD':['string',['int', _voidPtr, _voidPtr]]
+		})
+
+	var showWin = document.getElementById('showprintwindown')
+
+	showWin.addEventListener('click', (event) => {
+	
+		console.log("showwin click");
+		if(ctrlHandle == null)
+		{
+			ctrlHandle = tb.CreateGeneBillCtrl3();
+		}
+		
+	
+		var templatelist = fs.readFileSync('./dll/templatelist.json','utf-8');
+		var printcfgjson = fs.readFileSync('./dll/printcfg.json','utf-8');
+		var taskdata = fs.readFileSync('./dll/taskdata.json','utf-8');
+		var curtemplate = path.join('', __dirname, './dll/template.bof');
+		
+		console.log(templatelist);
+		console.log(printcfgjson);
+		console.log(taskdata);
+		console.log(curtemplate);
+
+		
+		tb.FD(ctrlHandle, Buffer.from('OpenFile\0', 'utf16le'), Buffer.from(curtemplate + '@@1\0', 'utf16le'));
+		
+		tb.FD(ctrlHandle, Buffer.from('SetPrintCfgJson\0', 'utf16le'), Buffer.from(printcfgjson + '@@1\0', 'utf16le'));
+		
+		tb.FD(ctrlHandle, Buffer.from('LoadPrintTaskData\0', 'utf16le'), Buffer.from(taskdata+'\0', 'utf16le'));
+		
+		tb.FD(ctrlHandle, Buffer.from('PrintPreview\0', 'utf16le'), Buffer.from('1@@'+ templatelist+'\0', 'utf16le'));
+		
+		tb.FD(ctrlHandle, Buffer.from('PrintBill\0', 'utf16le'), Buffer.from('0\0', 'utf16le'));
 		
 		
+		
+		
+		/*
+		if(win == null)
+		{
+			win = new BrowserWindow({ width: 800, height: 600 });
+			win.on('closed', () => {win = null});
+		}
+
+		var printPath = path.join('file://', __dirname, 'print.html');
+		win.loadURL(printPath);
+		win.show();*/
+		
+		
+	})
     </script>
   </body>
 </html>
