@@ -13,11 +13,18 @@
 	
 	<div class="form-group">
 		<label>七、C++ Dll hello</label>
+		
 		<span id="hello"></span>
 		
+		
 		<div class="demo-controls">
-            <button class="demo-button" id="preview">preview</button>
-			<button class="demo-button" id="printbill">printbill</button>
+            <button class="demo-button" id="preview">render_preview</button>
+			<button class="demo-button" id="printbill">render_printbill</button>
+			<br>
+			
+			<button class="demo-button" id="mainprocess_preview">mainprocess_preview</button>
+			<button class="demo-button" id="mainprocess_printbill">mainprocess_printbill</button>
+			<span id="async-reply"></span>
           </div>
 		
 	</div>
@@ -131,20 +138,27 @@
 		
 		
 		
-		
-		/*
-		if(win == null)
-		{
-			win = new BrowserWindow({ width: 800, height: 600 });
-			win.on('closed', () => {win = null});
-		}
-
-		var printPath = path.join('file://', __dirname, 'print.html');
-		win.loadURL(printPath);
-		win.show();*/
-		
-		
 	})
+	
+	const {ipcRenderer} = require('electron')
+	var mainprocess_preview = document.getElementById('mainprocess_preview')
+	var mainprocess_printbill = document.getElementById('mainprocess_printbill')
+	mainprocess_preview.addEventListener('click', (event) => {
+	
+		 ipcRenderer.send('asynchronous-message', 'preview')
+	})
+	
+	mainprocess_printbill.addEventListener('click', (event) => {
+	
+		 ipcRenderer.send('asynchronous-message', 'printbill')
+	})
+
+	ipcRenderer.on('asynchronous-reply', (event, arg) => {
+	  const message = `Asynchronous message reply: ${arg}`
+	  document.getElementById('async-reply').innerHTML = message
+	})
+
+	
     </script>
   </body>
 </html>

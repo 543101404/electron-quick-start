@@ -1,6 +1,58 @@
 // Modules to control application life and create native browser window
 const {app, BrowserWindow} = require('electron')
 
+const {ipcMain} = require('electron')
+
+ var ref = require("ref");
+	 var ffi = require("ffi");
+	 var path = require('path')
+	 var fs = require('fs')
+	 var _void = ref.types.void 
+		var _voidPtr = ref.refType(_void);
+
+	var ctrlHandle = null;
+	var tb = ffi.Library('dll/tbillonecore.dll', {
+
+				'CreateGeneBillCtrl3': ['int', []],
+				'FD':['string',['int', _voidPtr, _voidPtr]]
+		})
+	 
+ipcMain.on('asynchronous-message', (event, arg) => {
+
+  
+  
+  if(ctrlHandle == null)
+		{
+			ctrlHandle = tb.CreateGeneBillCtrl3();
+		}
+		
+	
+		var templatelist = fs.readFileSync('./dll/templatelist.json','utf-8');
+		var printcfgjson = fs.readFileSync('./dll/printcfg.json','utf-8');
+		var taskdata = fs.readFileSync('./dll/taskdata.json','utf-8');
+		var curtemplate = path.join('', __dirname, './dll/template.bof');
+		
+
+		
+		tb.FD(ctrlHandle, Buffer.from('OpenFile\0', 'utf16le'), Buffer.from(curtemplate + '@@1\0', 'utf16le'));
+		
+		tb.FD(ctrlHandle, Buffer.from('SetPrintCfgJson\0', 'utf16le'), Buffer.from(printcfgjson + '@@1\0', 'utf16le'));
+		
+		tb.FD(ctrlHandle, Buffer.from('LoadPrintTaskData\0', 'utf16le'), Buffer.from(taskdata+'\0', 'utf16le'));
+		if(arg == 'printbill')
+		{
+			tb.FD(ctrlHandle, Buffer.from('PrintBill\0', 'utf16le'), Buffer.from('0\0', 'utf16le'));
+		}
+		else
+		{
+			tb.FD(ctrlHandle, Buffer.from('PrintPreview\0', 'utf16le'), Buffer.from('0@@'+ templatelist+'\0', 'utf16le'));
+		}
+		
+		
+		event.sender.send('asynchronous-reply', arg	+': finished')
+})
+
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
