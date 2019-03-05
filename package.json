@@ -20,7 +20,9 @@
   "license": "CC0-1.0",
   "devDependencies": {},
   "dependencies": {
+    "electron": "^4.0.4",
     "ffi": "^2.3.0",
-    "nan": "^2.12.1"
+    "nan": "^2.12.1",
+    "winax": "^1.0.17"
   }
 }

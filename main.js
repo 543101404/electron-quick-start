@@ -8,25 +8,38 @@ const {ipcMain} = require('electron')
 	 var path = require('path')
 	 var fs = require('fs')
 	 var _void = ref.types.void 
-		var _voidPtr = ref.refType(_void);
+	var _voidPtr = ref.refType(_void);
 
 	var ctrlHandle = null;
-	var tb = ffi.Library('dll/tbillonecore.dll', {
+	var tb = null;
+		
+	var winax = require('winax');
+	var Variant = winax.Variant;
 
-				'CreateGeneBillCtrl3': ['int', []],
-				'FD':['string',['int', _voidPtr, _voidPtr]]
-		})
+	var libDisp = new winax.Object('TPComServerHost.LibDispatch');
+	
+	var tpPrint = new winax.Object('TPComServerHost.TPPrint'); 
+	var libPrint = null;
 	 
 ipcMain.on('asynchronous-message', (event, arg) => {
 
   
-  
-  if(ctrlHandle == null)
+  if(arg == 'printbill' || arg == 'preview' )
+  {
+	 	if(tb == null)
+		{
+			tb = ffi.Library('dll/tbillonecore.dll', {
+
+					'CreateGeneBillCtrl3': ['int', []],
+					'FD':['string',['int', _voidPtr, _voidPtr]]
+			})
+		}
+	  if(ctrlHandle == null)
 		{
 			ctrlHandle = tb.CreateGeneBillCtrl3();
 		}
+			
 		
-	
 		var templatelist = fs.readFileSync('./dll/templatelist.json','utf-8');
 		var printcfgjson = fs.readFileSync('./dll/printcfg.json','utf-8');
 		var taskdata = fs.readFileSync('./dll/taskdata.json','utf-8');
@@ -49,7 +62,56 @@ ipcMain.on('asynchronous-message', (event, arg) => {
 		}
 		
 		
-		event.sender.send('asynchronous-reply', arg	+': finished')
+		event.sender.send('asynchronous-reply', arg	+': finished');
+  }
+  else
+  // com invoke 
+  {
+	  console.log(arg);
+	  //var vHandle = new Variant(21, 'pint32');
+	  //libDisp.CreateLib("mylib", "myfun", vHandle);
+	  //console.log("createlib:" + vHandle);
+	 // var vrefRet = new Variant('abc', 'pstring');
+	 // libDisp.Test("hello",vrefRet);
+	 
+	 //var b1 = new Variant('b1', 'pstring');
+	// var b2 = new Variant('b2', 'pstring');
+	 //var b3 = new Variant('b3', 'pstring');
+	 //var b4 = new Variant(111, 'pvariant');
+	 //var b4 = libDisp.Test3(b1, b2, b3);
+	 // console.log("invoke:" + b1 + ',' + b2 + ',' + b3 + ',' + b4);
+	 
+	 if(libPrint == null)
+	 {
+		 console.log('create ctrl');
+		 libPrint = tpPrint.LoadLib();
+		 var vRet = tpPrint.CreateGeneBillCtrl3();
+		 console.log('CreateGeneBillCtrl3:' + vRet);
+	  }
+	 
+		var templatelist = fs.readFileSync('./dll/templatelist.json','utf-8');
+		var printcfgjson = fs.readFileSync('./dll/printcfg.json','utf-8');
+		var taskdata = fs.readFileSync('./dll/taskdata.json','utf-8');
+		var curtemplate = path.join('', __dirname, './dll/template.bof');
+		
+
+		
+		tpPrint.FD('OpenFile', curtemplate + '@@1');
+		
+		tpPrint.FD('SetPrintCfgJson', printcfgjson + '@@1');
+		
+		tpPrint.FD('LoadPrintTaskData', taskdata);
+		
+		if(arg == 'printbill_com')
+		{
+			tpPrint.FD('PrintBill', 0);
+		}
+		else
+		{
+			tpPrint.FD('PrintPreview', '0@@'+ templatelist);
+		}
+	 
+  }
 })
 
 
