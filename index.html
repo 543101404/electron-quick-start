@@ -18,12 +18,22 @@
 		
 		
 		<div class="demo-controls">
+			<span> 下边是在render进程调dll的例子，窗口会被卡住，不建议使用</span>
+			<br>
             <button class="demo-button" id="preview">render_preview</button>
 			<button class="demo-button" id="printbill">render_printbill</button>
 			<br>
 			
+			<span> 下边是在main进程调dll的例子，建议使用</span>
+			<br>
 			<button class="demo-button" id="mainprocess_preview">mainprocess_preview</button>
 			<button class="demo-button" id="mainprocess_printbill">mainprocess_printbill</button>
+			<br>
+			<span> 下边是在main进程 通过32位com服务器调dll的例子，无论electron32位还是64位，都可调用32位dll</span>
+			<br>
+			<button class="demo-button" id="mainprocess_preview_com">mainprocess_preview_com</button>
+			<button class="demo-button" id="mainprocess_printbill_com">mainprocess_printbill_com</button>
+			
 			<span id="async-reply"></span>
           </div>
 		
@@ -44,32 +54,12 @@
 
 	var win = null;
 
-		/*
-		const Dll = ffi.Library('dll/MyDLL.dll', {
-				'Add': ['float', ['float', 'float']],
-				'Hello': ['string', []],
-				'StrLength': ['int', ['string']]
-		})*/
-		/*
-		const testDll = ffi.Library('dll/DllExport32.dll', {
 
-				'Hello': ['string', []]
-
-		})
-		document.getElementById('hello').innerHTML = testDll.Hello();
-		*/
-		
-	
 		var _void = ref.types.void 
 		var _voidPtr = ref.refType(_void);
-		//var _stringPtr = ref.refType(ref.types.string);
-		//var stringPtr = ref.refType(ref.types.CString);
-		var ctrlHandle = null;
-	var tb = ffi.Library('dll/tbillonecore.dll', {
 
-				'CreateGeneBillCtrl3': ['int', []],
-				'FD':['string',['int', _voidPtr, _voidPtr]]
-		})
+	var ctrlHandle = null;
+	var tb = null;
 
 	var preview = document.getElementById('preview')
 	
@@ -78,6 +68,14 @@
 	printbill.addEventListener('click', (event) => {
 	
 		console.log("printbill");
+		if(tb == null)
+		{
+			 tb = ffi.Library('dll/tbillonecore.dll', {
+
+				'CreateGeneBillCtrl3': ['int', []],
+				'FD':['string',['int', _voidPtr, _voidPtr]]
+				})
+		}
 		if(ctrlHandle == null)
 		{
 			ctrlHandle = tb.CreateGeneBillCtrl3();
@@ -109,6 +107,14 @@
 	preview.addEventListener('click', (event) => {
 	
 		console.log("preview");
+		if(tb == null)
+		{
+			 tb = ffi.Library('dll/tbillonecore.dll', {
+
+				'CreateGeneBillCtrl3': ['int', []],
+				'FD':['string',['int', _voidPtr, _voidPtr]]
+				})
+		}
 		if(ctrlHandle == null)
 		{
 			ctrlHandle = tb.CreateGeneBillCtrl3();
@@ -140,6 +146,7 @@
 		
 	})
 	
+	//----ffi main process invoke dll
 	const {ipcRenderer} = require('electron')
 	var mainprocess_preview = document.getElementById('mainprocess_preview')
 	var mainprocess_printbill = document.getElementById('mainprocess_printbill')
@@ -151,6 +158,19 @@
 	mainprocess_printbill.addEventListener('click', (event) => {
 	
 		 ipcRenderer.send('asynchronous-message', 'printbill')
+	})
+	
+	//----com main process invoke dll
+	var mainprocess_preview_com = document.getElementById('mainprocess_preview_com')
+	var mainprocess_printbill_com = document.getElementById('mainprocess_printbill_com')
+	mainprocess_preview_com.addEventListener('click', (event) => {
+	
+		 ipcRenderer.send('asynchronous-message', 'preview_com')
+	})
+	
+	mainprocess_printbill_com.addEventListener('click', (event) => {
+	
+		 ipcRenderer.send('asynchronous-message', 'printbill_com')
 	})
 
 	ipcRenderer.on('asynchronous-reply', (event, arg) => {
